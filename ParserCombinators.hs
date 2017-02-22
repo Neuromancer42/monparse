@@ -1,11 +1,13 @@
 module ParserCombinators
   ( Parser
-  , runParser
+  , parse
   , anyChar
   , char
   , anyCharBut
   , both
   , sepBy
+  , module Control.Applicative.Alternative
+  , module Control.Monad.Plus
   ) where
 
 import Control.Applicative.Alternative
@@ -17,6 +19,14 @@ newtype Parser a =
 -- get a parser out of wrapper
 runParser :: Parser a -> String -> [(a, String)]
 runParser (P p) = p
+
+parse :: Parser a -> String -> [a]
+parse p s = selectResult $ runParser p s
+  where
+    selectResult [] = []
+    selectResult ((res, r):ss)
+      | null r = res : selectResult ss
+      | otherwise = selectResult ss
 
 -- a Parser that always fails
 zeroParser :: Parser a
@@ -41,6 +51,7 @@ instance Monad Parser where
 instance Alternative Parser where
   empty = zeroParser
   (<|>) = orElse
+  many p = ((:) <$> p <*> many p) <|> pure []
 
 instance MonadPlus Parser
 
