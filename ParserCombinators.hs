@@ -1,5 +1,15 @@
-main :: IO ()
-main = undefined
+module ParserCombinators
+  ( Parser
+  , runParser
+  , anyChar
+  , char
+  , anyCharBut
+  , both
+  , sepBy
+  ) where
+
+import Control.Applicative.Alternative
+import Control.Monad.Plus
 
 newtype Parser a =
   P (String -> [(a, String)])
@@ -27,6 +37,12 @@ instance Applicative Parser where
 instance Monad Parser where
   return = pureParser
   (P p) >>= f = P $ \inp -> concat [runParser (f x) inp' | (x, inp') <- p inp]
+
+instance Alternative Parser where
+  empty = zeroParser
+  (<|>) = orElse
+
+instance MonadPlus Parser
 
 -- some primitive parsers
 anyChar :: Parser Char
@@ -58,10 +74,6 @@ orElse (P p) (P q) =
 
 both :: Parser a -> Parser a -> Parser a
 both (P p) (P q) = P $ \inp -> p inp ++ q inp
-
-many :: Parser a -> Parser [a]
-many p = do
-  ((:) <$> p <*> many p) `orElse` return []
 
 sepBy :: Parser a -> Parser () -> Parser [a]
 sepBy p q = ((:) <$> p <*> many (q >> p)) `orElse` return []
