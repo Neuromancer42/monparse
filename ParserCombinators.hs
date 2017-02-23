@@ -4,6 +4,7 @@ module ParserCombinators
   , anyChar
   , char
   , anyCharBut
+  , sat
   , both
   , sepBy
   , module Control.Applicative.Alternative
@@ -75,6 +76,13 @@ anyCharBut ch = do
   if ch == ch'
     then zeroParser
     else return ch'
+
+sat :: (a -> Bool) -> Parser a -> Parser a
+sat p par = do
+  x <- par
+  if p x
+    then return x
+    else zeroParser
 
 orElse :: Parser a -> Parser a -> Parser a
 orElse (P p) (P q) =
