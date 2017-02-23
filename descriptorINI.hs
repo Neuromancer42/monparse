@@ -1,5 +1,8 @@
 import Data.Char
 import DescriptorCombinators
+import System.Environment
+import System.Exit
+import System.IO
 
 type Identifier = String
 
@@ -26,4 +29,19 @@ describeINI = some describeSection
     describeComment = nonTerminal "comment" $ pure [] <* char '#' <* remainder
     describeEmpty = pure [] <* newline
     spaces = nonTerminal "spaces" $ many (char ' ')
-    remainder = nonTerminal "line-remainder" $ some (primitive "non-newline" (anyCharButP '\n')) <* newline
+    remainder =
+      nonTerminal "line-remainder" $ some (primitive "non-newline" (anyCharButP '\n')) <* newline
+
+main :: IO ()
+main = do
+  args <- getArgs
+  case args of
+    [] -> putStr $ ppGrammar "ini" describeINI
+    [fileName] -> do
+      input <- readFile fileName
+      case parse describeINI input of
+        [] -> do
+          hPutStrLn stderr "Failed to parse INI file."
+          exitFailure
+        x:_ -> print x
+    _ -> hPutStrLn stderr "Too many arguments" >> exitFailure
