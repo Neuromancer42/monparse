@@ -7,11 +7,7 @@ parseCSV :: Parser [[String]]
 parseCSV = many parseLine
   where
     parseLine = parseCell `sepByP` charP ',' <* charP '\n'
-    parseCell = do
-      charP '"'
-      content <- many (anyCharButP '"')
-      charP '"'
-      return content
+    parseCell = charP '"' *> many (anyCharButP '"') <* charP '"'
 
 main :: IO ()
 main = do
