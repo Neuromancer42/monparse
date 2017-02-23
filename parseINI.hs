@@ -16,31 +16,31 @@ parseINI :: Parser INIFile
 parseINI = some parseSection
   where
     parseSection = do
-      char '['
+      charP '['
       title <- parseIdentifier
-      char ']'
-      char '\n'
+      charP ']'
+      charP '\n'
       decls <- many parseLine
       return (title, concat decls)
     parseIdentifier = some parseLetterOrDigit
-    parseLetterOrDigit = sat isAlphaNum anyChar
+    parseLetterOrDigit = satP isAlphaNum anyCharP
     parseLine = parseDecl <|> parseComment <|> parseEmpty
     parseDecl = do
       i <- parseIdentifier
-      _ <- many (char ' ')
-      char '='
-      _ <- many (char ' ')
-      c <- some (anyCharBut '\n')
-      char '\n'
+      _ <- many (charP ' ')
+      charP '='
+      _ <- many (charP ' ')
+      c <- some (anyCharButP '\n')
+      charP '\n'
       return [(i, c)]
     parseComment = do
-      char '#'
-      _ <- many (anyCharBut '\n')
-      char '\n'
+      charP '#'
+      _ <- many (anyCharButP '\n')
+      charP '\n'
       return []
     parseEmpty = do
-      _ <- many (char ' ')
-      char '\n'
+      _ <- many (charP ' ')
+      charP '\n'
       return []
 
 main :: IO ()

@@ -6,11 +6,11 @@ import System.IO
 parseCSV :: Parser [[String]]
 parseCSV = many parseLine
   where
-    parseLine = parseCell `sepBy` char ',' <* char '\n'
+    parseLine = parseCell `sepByP` charP ',' <* charP '\n'
     parseCell = do
-      char '"'
-      content <- many (anyCharBut '"')
-      char '"'
+      charP '"'
+      content <- many (anyCharButP '"')
+      charP '"'
       return content
 
 main :: IO ()

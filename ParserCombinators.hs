@@ -1,12 +1,12 @@
 module ParserCombinators
   ( Parser
   , parse
-  , anyChar
-  , char
-  , anyCharBut
-  , sat
-  , both
-  , sepBy
+  , anyCharP
+  , charP
+  , anyCharButP
+  , satP
+  , bothP
+  , sepByP
   , module Control.Applicative.Alternative
   , module Control.Monad.Plus
   ) where
@@ -51,48 +51,48 @@ instance Monad Parser where
 
 instance Alternative Parser where
   empty = zeroParser
-  (<|>) = orElse
+  (<|>) = orElseP
   many p = ((:) <$> p <*> many p) <|> pure []
 
 instance MonadPlus Parser
 
 -- some primitive parsers
-anyChar :: Parser Char
-anyChar = P f
+anyCharP :: Parser Char
+anyCharP = P f
   where
     f [] = []
     f (x:xs) = [(x, xs)]
 
-char :: Char -> Parser ()
-char ch = do
-  ch' <- anyChar
+charP :: Char -> Parser ()
+charP ch = do
+  ch' <- anyCharP
   if ch == ch'
     then return ()
     else zeroParser
 
-anyCharBut :: Char -> Parser Char
-anyCharBut ch = do
-  ch' <- anyChar
+anyCharButP :: Char -> Parser Char
+anyCharButP ch = do
+  ch' <- anyCharP
   if ch == ch'
     then zeroParser
     else return ch'
 
-sat :: (a -> Bool) -> Parser a -> Parser a
-sat p par = do
+satP :: (a -> Bool) -> Parser a -> Parser a
+satP p par = do
   x <- par
   if p x
     then return x
     else zeroParser
 
-orElse :: Parser a -> Parser a -> Parser a
-orElse (P p) (P q) =
+orElseP :: Parser a -> Parser a -> Parser a
+orElseP (P p) (P q) =
   P $ \inp ->
     if null (p inp)
       then q inp
       else p inp
 
-both :: Parser a -> Parser a -> Parser a
-both (P p) (P q) = P $ \inp -> p inp ++ q inp
+bothP :: Parser a -> Parser a -> Parser a
+bothP (P p) (P q) = P $ \inp -> p inp ++ q inp
 
-sepBy :: Parser a -> Parser () -> Parser [a]
-sepBy p q = ((:) <$> p <*> many (q >> p)) `orElse` return []
+sepByP :: Parser a -> Parser () -> Parser [a]
+sepByP p q = ((:) <$> p <*> many (q >> p)) <|> return []
