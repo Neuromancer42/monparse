@@ -1,5 +1,6 @@
 import DescriptorCombinators
 
+describeCSV :: Descr f => f [[String]]
 describeCSV = many describeLine
   where
     describeLine = nonTerminal "line" $ describeCell `sepBy` char ',' <* newline
