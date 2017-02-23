@@ -7,12 +7,10 @@ module ParserCombinators
   , satP
   , bothP
   , sepByP
-  , module Control.Applicative.Alternative
-  , module Control.Monad.Plus
+  , manyP
+  , someP
+  , orElseP
   ) where
-
-import Control.Applicative.Alternative
-import Control.Monad.Plus
 
 newtype Parser a =
   P (String -> [(a, String)])
@@ -49,13 +47,6 @@ instance Monad Parser where
   return = pureParser
   (P p) >>= f = P $ \inp -> concat [runParser (f x) inp' | (x, inp') <- p inp]
 
-instance Alternative Parser where
-  empty = zeroParser
-  (<|>) = orElseP
-  many p = ((:) <$> p <*> many p) <|> pure []
-
-instance MonadPlus Parser
-
 -- some primitive parsers
 anyCharP :: Parser Char
 anyCharP = P f
@@ -91,8 +82,14 @@ orElseP (P p) (P q) =
       then q inp
       else p inp
 
+manyP :: Parser a -> Parser [a]
+manyP p = ((:) <$> p <*> manyP p) `orElseP` pure []
+
+someP :: Parser a -> Parser [a]
+someP p = (:) <$> p <*> manyP p
+
 bothP :: Parser a -> Parser a -> Parser a
 bothP (P p) (P q) = P $ \inp -> p inp ++ q inp
 
 sepByP :: Parser a -> Parser () -> Parser [a]
-sepByP p q = ((:) <$> p <*> many (q >> p)) <|> return []
+sepByP p q = ((:) <$> p <*> manyP (q >> p)) `orElseP` return []
