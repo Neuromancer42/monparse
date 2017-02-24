@@ -1,6 +1,8 @@
 import BNF
-import Data.Char
 import DescriptorCombinators
+import System.Environment
+import System.Exit
+import System.IO
 
 describeBNF
   :: Descr f
@@ -37,3 +39,17 @@ describeBNF = some describeProd
     describeRept rhs = nonTerminal "repetition" $ Repetition <$> braces '{' '}' rhs
     describeGroup rhs = nonTerminal "group" $ braces '(' ')' rhs
     braces l r inner = char l *> spaces *> inner <* spaces <* char r <* spaces
+
+main :: IO ()
+main = do
+  args <- getArgs
+  case args of
+    [] -> putStr $ ppGrammar "bnf" describeBNF
+    [fileName] -> do
+      input <- readFile fileName
+      case parse describeBNF input of
+        x:_ -> putStr $ ppBNF x
+        [] -> do
+          hPutStrLn stderr "Failed to parse INI file."
+          exitFailure
+    _ -> hPutStrLn stderr "Too many arguments given" >> exitFailure

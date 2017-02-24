@@ -22,13 +22,13 @@ describeINI = some describeSection
       pure (,) <* char '[' <*> describeIdentifier <* char ']' <*> (concat <$> many describeLine)
     describeIdentifier = nonTerminal "identifier" $ some (primitive "alphanum" parseLetterOrDigit)
     parseLetterOrDigit = satP isAlphaNum anyCharP
-    describeLine = nonTerminal "line" $ describeDecl `orElse` describeComment `orElse` describeEmpty
+    describeLine = nonTerminal "line" $ describeDecl <|> describeComment <|> describeEmpty
     describeDecl =
       nonTerminal "declaration" $
-      (: []) <$> (pure (,) <*> describeIdentifier <* spaces <* char '=' <* spaces <*> remainder)
+      (: []) <$> (pure (,) <*> describeIdentifier <* spaces' <* char '=' <* spaces' <*> remainder)
     describeComment = nonTerminal "comment" $ pure [] <* char '#' <* remainder
     describeEmpty = pure [] <* newline
-    spaces = nonTerminal "spaces" $ many (char ' ')
+    spaces' = nonTerminal "spaces" $ many (char ' ')
     remainder =
       nonTerminal "line-remainder" $ some (primitive "non-newline" (anyCharButP '\n')) <* newline
 

@@ -34,6 +34,7 @@ mkSequences = foldl Sequence
 ppRHS :: RHS -> String
 ppRHS = go 0
   where
+    go :: Integer -> RHS -> String
     go _ (Terminal s) = surround "'" "'" $ concatMap quote s
     go _ (NonTerminal s) = s
     go a (Choice x1 x2) = p a 1 $ go 1 x1 ++ " | " ++ go 1 x2
