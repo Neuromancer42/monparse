@@ -87,12 +87,9 @@ satP p par = do
 orElseP :: Parser a -> Parser a -> Parser a
 orElseP (P p) (P q) =
   P $ \inp ->
-    let r = p inp in
-        if isJust r then r
-                    else q inp
-    -- case p inp of
-       -- Just r -> Just r
-       --  Nothing -> q inp
+    case p inp of
+      Just r -> Just r
+      Nothing -> q inp
 
 manyP :: Parser a -> Parser [a]
 manyP p = ((:) <$> p <*> manyP p) `orElseP` pure []
