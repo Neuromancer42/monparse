@@ -35,7 +35,9 @@ pureParser x = P $ \inp -> Just (x, inp)
 
 -- instantiation as Functor, Applicative, and Monad
 instance Functor Parser where
-  fmap f (P p) = P $ fmap (\(x, inp) -> (f x, inp)) . p
+  fmap f (P p) = P $ \inp -> case p inp of
+                                 Just (result, rest) -> Just (f result, rest)
+                                 Nothing -> Nothing
 
 instance Applicative Parser where
   pure = pureParser

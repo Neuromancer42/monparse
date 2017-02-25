@@ -1,0 +1,14 @@
+lonlonlonlonlonlonlonlonlonlonlonlonlonggggggggggggglongidentifier = letter, {letter | digit | '-'};
+spaces = {' ' | newline};
+quoted-char = non-quote-or-backslash | '\\', '\\' | '\\', '\'';
+terminal = '\'', {quoted-char}, '\'', spaces;
+non-terminal = identifier, spaces;
+option = '[', spaces, rhs, spaces, ']', spaces;
+repetition = '{', spaces, rhs, spaces, '}', spaces;
+group = '(', spaces, rhs, spaces, ')', spaces;
+atom = terminal | non-terminal | option | repetition | group;
+sequence = atom, {spaces, ',', spaces, atom}, spaces;
+choice = sequence, {spaces, '|', spaces, sequence}, spaces;
+rhs = choice;
+production = identifier, spaces, '=', spaces, rhs, ';', spaces;
+bnf = production, {production};
