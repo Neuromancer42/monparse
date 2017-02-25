@@ -40,8 +40,8 @@ main = do
     [fileName] -> do
       input <- readFile fileName
       case parse describeINI input of
-        [] -> do
+        Nothing -> do
           hPutStrLn stderr "Failed to parse INI file."
           exitFailure
-        x:_ -> print x
+        Just x -> print x
     _ -> hPutStrLn stderr "Too many arguments" >> exitFailure

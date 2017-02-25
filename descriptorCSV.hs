@@ -1,14 +1,16 @@
-import Data.Char
 import DescriptorCombinators
 import System.Environment
 import System.Exit
 import System.IO
 
-describeCSV :: Descr f => f [[String]]
+describeCSV
+  :: Descr f
+  => f [[String]]
 describeCSV = many describeLine
   where
     describeLine = nonTerminal "line" $ describeCell `sepBy` char ',' <* newline
-    describeCell = nonTerminal "cell" $ char '"' *> many (primitive "not-quote" (anyCharButP '"')) <* char '"'
+    describeCell =
+      nonTerminal "cell" $ char '"' *> many (primitive "not-quote" (anyCharButP '"')) <* char '"'
 
 main :: IO ()
 main = do
@@ -18,8 +20,8 @@ main = do
     [fileName] -> do
       input <- readFile fileName
       case parse describeCSV input of
-        [] -> do
+        Nothing -> do
           hPutStrLn stderr "Failed to parse csv file."
           exitFailure
-        x:_ -> print x
+        Just x -> print x
     _ -> hPutStrLn stderr "Too many arguments" >> exitFailure

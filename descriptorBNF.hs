@@ -48,8 +48,8 @@ main = do
     [fileName] -> do
       input <- readFile fileName
       case parse describeBNF input of
-        x:_ -> putStr $ ppBNF x
-        [] -> do
+        Just x -> putStr $ ppBNF x
+        Nothing -> do
           hPutStrLn stderr "Failed to parse INI file."
           exitFailure
     _ -> hPutStrLn stderr "Too many arguments given" >> exitFailure

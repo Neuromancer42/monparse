@@ -5,7 +5,6 @@ module ParserCombinators
   , charP
   , anyCharButP
   , satP
-  , bothP
   , sepByP
   , manyP
   , someP
@@ -13,46 +12,52 @@ module ParserCombinators
   ) where
 
 newtype Parser a =
-  P (String -> [(a, String)])
+  P (String -> Maybe (a, String))
 
 -- get a parser out of wrapper
-runParser :: Parser a -> String -> [(a, String)]
+runParser :: Parser a -> String -> Maybe (a, String)
 runParser (P p) = p
 
-parse :: Parser a -> String -> [a]
+parse :: Parser a -> String -> Maybe a
 parse p s = selectResult $ runParser p s
   where
-    selectResult [] = []
-    selectResult ((res, r):ss)
-      | null r = res : selectResult ss
-      | otherwise = selectResult ss
+    selectResult Nothing = Nothing
+    selectResult (Just (result, "")) = Just result
+    selectResult _ = Nothing
 
 -- a Parser that always fails
 zeroParser :: Parser a
-zeroParser = P $ const []
+zeroParser = P $ const Nothing
 
 -- a Parser that does nothing but return a single value
 pureParser :: a -> Parser a
-pureParser x = P $ \inp -> [(x, inp)]
+pureParser x = P $ \inp -> Just (x, inp)
 
 -- instantiation as Functor, Applicative, and Monad
 instance Functor Parser where
-  fmap f (P p) = P $ map (\(x, inp) -> (f x, inp)) . p
+  fmap f (P p) = P $ fmap (\(x, inp) -> (f x, inp)) . p
 
 instance Applicative Parser where
   pure = pureParser
-  (P pf) <*> (P px) = P $ \inp -> [(f x, inp'') | (f, inp') <- pf inp, (x, inp'') <- px inp']
+  (P pf) <*> (P px) =
+    P $ \inp -> do
+      (f, inp') <- pf inp
+      (x, inp'') <- px inp'
+      return (f x, inp'')
 
 instance Monad Parser where
   return = pureParser
-  (P p) >>= f = P $ \inp -> concat [runParser (f x) inp' | (x, inp') <- p inp]
+  (P p) >>= f =
+    P $ \inp -> do
+      (x, inp') <- p inp
+      runParser (f x) inp'
 
 -- some primitive parsers
 anyCharP :: Parser Char
 anyCharP = P f
   where
-    f [] = []
-    f (x:xs) = [(x, xs)]
+    f [] = Nothing
+    f (x:xs) = Just (x, xs)
 
 charP :: Char -> Parser ()
 charP ch = do
@@ -87,9 +92,6 @@ manyP p = ((:) <$> p <*> manyP p) `orElseP` pure []
 
 someP :: Parser a -> Parser [a]
 someP p = (:) <$> p <*> manyP p
-
-bothP :: Parser a -> Parser a -> Parser a
-bothP (P p) (P q) = P $ \inp -> p inp ++ q inp
 
 sepByP :: Parser a -> Parser () -> Parser [a]
 sepByP p q = ((:) <$> p <*> manyP (q >> p)) `orElseP` return []
