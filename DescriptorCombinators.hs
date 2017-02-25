@@ -93,4 +93,4 @@ nonQuoteOrBackSlash
   :: Descr f
   => f Char
 nonQuoteOrBackSlash =
-  primitive "non-quote-or-backslash" $ satP (\ch -> ch /= '\'' || ch /= '\\') anyCharP
+  primitive "non-quote-or-backslash" $ satP (\ch -> ch /= '\'' && ch /= '\\') anyCharP
